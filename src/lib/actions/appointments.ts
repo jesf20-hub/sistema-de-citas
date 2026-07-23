@@ -10,6 +10,7 @@ import {
   isFutureOrToday,
   isWithinSchedule,
 } from "@/lib/booking";
+import { audit } from "@/lib/logger";
 import { z } from "zod";
 
 export async function createAppointment(formData: FormData) {
@@ -115,6 +116,7 @@ export async function createAppointment(formData: FormData) {
     return { error: "Error al crear la cita" };
   }
 
+  audit(user.id, "appointment_created", { professional_id, service_id, date });
   revalidatePath("/cliente");
   return { success: true };
 }
@@ -162,6 +164,11 @@ export async function updateAppointmentStatus(formData: FormData) {
 
   if (error) return { error: "Error al actualizar la cita" };
 
+  audit(user.id, "appointment_status_updated", {
+    appointment_id: parsed.data.id,
+    new_status: parsed.data.status,
+    by_role: profile.role,
+  });
   revalidatePath("/profesional");
   revalidatePath("/cliente");
   return { success: true };

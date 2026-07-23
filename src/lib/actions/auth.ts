@@ -4,6 +4,7 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { signupSchema, loginSchema, profileUpdateSchema } from "@/lib/schemas";
+import { audit, security } from "@/lib/logger";
 
 export async function signup(
   _state: { error?: string } | undefined,
@@ -33,6 +34,7 @@ export async function signup(
   });
 
   if (error) {
+    security("signup_failed", { email });
     return {
       error: error.status === 429
         ? "Demasiados intentos. Intenta de nuevo más tarde."
@@ -62,6 +64,7 @@ export async function login(
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
 
   if (error) {
+    security("login_failed", { email: parsed.data.email });
     return { error: "Credenciales inválidas" };
   }
 
@@ -110,6 +113,7 @@ export async function updateProfile(formData: FormData) {
 
   if (error) return { error: "Error al actualizar el perfil" };
 
+  audit(user.id, "profile_updated", { fields: Object.keys(parsed.data) });
   revalidatePath("/perfil");
   return { success: true };
 }
@@ -160,6 +164,8 @@ export async function uploadAvatar(formData: FormData) {
     .eq("id", user.id);
 
   if (updateError) return { error: "Error al actualizar el perfil" };
+
+  audit(user.id, "avatar_uploaded");
 
   // Limpieza: borra avatares anteriores del usuario para no acumular basura.
   const { data: existing } = await supabase.storage.from("avatars").list(user.id);
