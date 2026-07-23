@@ -36,6 +36,11 @@ export default async function proxy(req: NextRequest) {
   // contrario los tokens nunca se renuevan y la sesion expira antes de tiempo.
   let response = NextResponse.next({ request: req });
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl || !supabaseUrl.startsWith("http")) {
+    return response;
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -57,22 +62,35 @@ export default async function proxy(req: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Si Supabase no responde (sin conexión, URL inválida), dejamos pasar las
+  // peticiones a rutas públicas y redirigimos solo las protegidas a /login.
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user ?? null;
+  } catch {
+    if (isProtectedRoute) {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
+    return response;
+  }
 
   if (isProtectedRoute && !user) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
   if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    const role = profile?.role ?? "cliente";
+    let role = "cliente";
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      role = profile?.role ?? "cliente";
+    } catch {
+      // Si no podemos consultar profiles (DB offline), asumimos cliente.
+    }
 
     // Usuario autenticado en rutas de auth -> a su dashboard.
     if (isAuthRoute) {
