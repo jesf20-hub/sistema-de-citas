@@ -1,16 +1,17 @@
+import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const sentryDsn = process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN;
 
-// Content-Security-Policy. 'unsafe-inline' en style es necesario por Tailwind/
-// estilos inline de Next; los scripts se restringen a 'self'. connect-src y
-// img-src permiten el dominio de Supabase (API/Realtime/Storage).
+// Content-Security-Policy. Se agrega el DSN de Sentry si está configurado.
 const csp = [
   "default-src 'self'",
   "script-src 'self'",
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: ${supabaseUrl}`.trim(),
-  `connect-src 'self' ${supabaseUrl} ${supabaseUrl.replace("https://", "wss://")}`.trim(),
+  `connect-src 'self' ${supabaseUrl} ${supabaseUrl.replace("https://", "wss://")}`.trim() +
+    (sentryDsn ? " https://*.ingest.sentry.io" : ""),
   "font-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",
@@ -49,4 +50,13 @@ const nextConfig: NextConfig = {
   ],
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  reactComponentAnnotation: { enabled: true },
+  tunnelRoute: "/monitoring",
+  disableLogger: true,
+  automaticVercelMonitors: true,
+});
