@@ -1,0 +1,16 @@
+node_modules
+.git
+.env
+.env.local
+.env.*.local
+.next
+out
+dist
+coverage
+playwright-report
+test-results
+*.md
+!README.md
+.npm
+.cache
+**/.DS_Store
