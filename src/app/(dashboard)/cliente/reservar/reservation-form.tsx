@@ -12,13 +12,18 @@ type Professional = {
 
 export function ReservationForm({
   professionals,
+  userId,
+  preselectedPro,
+  preselectedSvc,
 }: {
   professionals: Professional[];
   userId: string;
+  preselectedPro?: string;
+  preselectedSvc?: string;
 }) {
   const router = useRouter();
-  const [selectedPro, setSelectedPro] = useState("");
-  const [selectedService, setSelectedService] = useState("");
+  const [selectedPro, setSelectedPro] = useState(preselectedPro ?? "");
+  const [selectedService, setSelectedService] = useState(preselectedSvc ?? "");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [notes, setNotes] = useState("");

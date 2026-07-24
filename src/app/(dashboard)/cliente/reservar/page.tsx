@@ -38,7 +38,12 @@ function groupServicesByProfessional(services: ServiceWithPro[]) {
   return Object.values(grouped);
 }
 
-export default async function ReservarPage() {
+export default async function ReservarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ professional_id?: string; service_id?: string }>;
+}) {
+  const params = await searchParams;
   const user = await getUser();
   const supabase = await createClient();
 
@@ -78,7 +83,12 @@ export default async function ReservarPage() {
       <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-8">
         Reservar cita
       </h1>
-      <ReservationForm professionals={professionals} userId={user!.id} />
+      <ReservationForm
+        professionals={professionals}
+        userId={user!.id}
+        preselectedPro={params.professional_id}
+        preselectedSvc={params.service_id}
+      />
     </div>
   );
 }

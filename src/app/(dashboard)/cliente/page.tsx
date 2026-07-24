@@ -72,7 +72,7 @@ export default async function ClienteDashboardPage() {
               )}
               {(appt.status === "pendiente" || appt.status === "confirmada") && (
                 <div className="mt-3">
-                  <CancelButton id={appt.id} />
+                  <CancelButton appointmentId={appt.id} />
                 </div>
               )}
             </div>

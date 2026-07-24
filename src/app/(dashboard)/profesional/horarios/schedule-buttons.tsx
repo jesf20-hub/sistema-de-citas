@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { createSchedule, deleteSchedule } from "@/lib/actions/profesional";
 import { DAYS } from "@/lib/utils";
 import { useFormDirty } from "@/lib/use-form-dirty";
 
@@ -72,7 +71,8 @@ export function ScheduleForm({ schedule }: { schedule?: Schedule }) {
                 if (!isEditing) {
                   fd.append("day_of_week", String(schedule!.day_of_week));
                 }
-                const result = await createSchedule(fd);
+                const res = await fetch("/api/schedules", { method: "POST", body: fd });
+                const result = await res.json();
                 if (!result?.error) setOpen(false);
               }}
               className="space-y-4"
@@ -189,7 +189,7 @@ export function DeleteScheduleButton({ id }: { id: string }) {
                 disabled={loading}
                 onClick={async () => {
                   setLoading(true);
-                  await deleteSchedule(id);
+                  await fetch("/api/schedules", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
                   toast.success("Horario eliminado");
                   setShowConfirm(false);
                   setLoading(false);

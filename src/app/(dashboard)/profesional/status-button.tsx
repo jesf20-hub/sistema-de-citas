@@ -1,14 +1,6 @@
 "use client";
 
-import { updateAppointmentStatus } from "@/lib/actions/appointments";
-
-export function StatusButton({
-  id,
-  status,
-}: {
-  id: string;
-  status: string;
-}) {
+export function StatusButton({ id, status }: { id: string; status: string }) {
   const labels: Record<string, string> = {
     confirmada: "Confirmar",
     cancelada: "Rechazar",
@@ -21,12 +13,15 @@ export function StatusButton({
     completada: "bg-blue-600 hover:bg-blue-700",
   };
 
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    await fetch("/api/appointments", { method: "PUT", body: formData });
+    window.location.reload();
+  }
+
   return (
-    <form
-      action={async (formData: FormData) => {
-        await updateAppointmentStatus(formData);
-      }}
-    >
+    <form onSubmit={handleSubmit}>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="status" value={status} />
       <button

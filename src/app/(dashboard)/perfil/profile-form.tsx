@@ -3,7 +3,6 @@
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { useFormDirty } from "@/lib/use-form-dirty";
-import { updateProfile, uploadAvatar } from "@/lib/actions/auth";
 
 type UserProfile = {
   id: string;
@@ -44,7 +43,8 @@ export function ProfileForm({ user, phone: initialPhone, bio: initialBio, avatar
     const fd = new FormData();
     fd.append("avatar", file);
 
-    const result = await uploadAvatar(fd);
+    const res = await fetch("/api/profile/avatar", { method: "POST", body: fd });
+    const result = await res.json();
 
     if (result?.error) {
       toast.error(result.error);
@@ -69,7 +69,8 @@ export function ProfileForm({ user, phone: initialPhone, bio: initialBio, avatar
     fd.append("phone", phone);
     fd.append("bio", bio);
 
-    const result = await updateProfile(fd);
+    const res = await fetch("/api/profile", { method: "POST", body: fd });
+    const result = await res.json();
 
     if (result?.error) {
       toast.error(result.error);

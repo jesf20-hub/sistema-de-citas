@@ -1,22 +1,19 @@
 "use client";
 
-import { updateUserRole } from "@/lib/actions/admin";
+export function UpdateRoleForm({ userId, currentRole }: { userId: string; currentRole: string }) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    await fetch("/api/admin/role", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, role: formData.get("role") }),
+    });
+    window.location.reload();
+  }
 
-export function UpdateRoleForm({
-  userId,
-  currentRole,
-}: {
-  userId: string;
-  currentRole: string;
-}) {
   return (
-    <form
-      action={async (fd: FormData) => {
-        await updateUserRole(userId, fd.get("role") as string);
-      }}
-      className="flex items-center gap-2"
-    >
-      <input type="hidden" name="userId" value={userId} />
+    <form onSubmit={handleSubmit} className="flex items-center gap-2">
       <select
         name="role"
         defaultValue={currentRole}

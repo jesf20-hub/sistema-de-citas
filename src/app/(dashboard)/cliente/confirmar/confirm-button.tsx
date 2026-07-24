@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { createAppointment } from "@/lib/actions/appointments";
 
 type ConfirmButtonProps = {
   professionalId: string;
@@ -34,7 +33,8 @@ export function ConfirmButton({
     formData.append("end_time", endTime);
     if (notes) formData.append("notes", notes);
 
-    const result = await createAppointment(formData);
+    const res = await fetch("/api/appointments", { method: "POST", body: formData });
+    const result = await res.json();
 
     if (result?.error) {
       toast.error(result.error);

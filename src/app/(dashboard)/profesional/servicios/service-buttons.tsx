@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { createService, updateService, deleteService } from "@/lib/actions/profesional";
 import { useFormDirty } from "@/lib/use-form-dirty";
 
 type Service = {
@@ -71,13 +70,12 @@ export function ServiceForm({ service }: { service?: Service }) {
               {isEditing ? "Editar servicio" : "Nuevo servicio"}
             </h2>
             <form
-              action={async (fd: FormData) => {
-                if (isEditing) {
-                  fd.append("id", service.id);
-                }
-                const result = isEditing
-                  ? await updateService(fd)
-                  : await createService(fd);
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const fd = new FormData(e.currentTarget);
+                if (isEditing) fd.append("id", service!.id);
+                const res = await fetch("/api/services", { method: isEditing ? "PUT" : "POST", body: fd });
+                const result = await res.json();
                 if (!result?.error) setOpen(false);
               }}
               className="space-y-4"
@@ -233,7 +231,7 @@ export function DeleteServiceButton({ id }: { id: string }) {
                 disabled={loading}
                 onClick={async () => {
                   setLoading(true);
-                  await deleteService(id);
+                  await fetch("/api/services", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
                   toast.success("Servicio eliminado");
                   setShowConfirm(false);
                   setLoading(false);
